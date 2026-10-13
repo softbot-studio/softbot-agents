@@ -1,0 +1,15 @@
+# Softbot Studio
+
+> Pay-per-call tools for AI agents over x402 (HTTP 402). Solana mainnet USDC via the PayAI facilitator. No signup or API key; failed calls are free.
+
+## Tools
+- [Softbot Reader](https://softbot-reader-mainnet.softbot.workers.dev/openapi.json): Turns any public web page URL into clean markdown (title, main text, links) for LLM context. Use when an agent needs to read a web page without running a browser. $0.003/call. POST https://softbot-reader-mainnet.softbot.workers.dev/v1/read
+- [Softbot Token Check](https://softbot-tokencheck-mainnet.softbot.workers.dev/openapi.json): Safety verdict (safe / caution / avoid) for a Solana SPL token with reasons: mint & freeze authority, token age, top-10 holder concentration (exchange/pool wallets excluded), metadata and liquidity. Use before trading, accepting or recommending a Solana token. $0.01/call. POST https://softbot-tokencheck-mainnet.softbot.workers.dev/v1/check
+- [Softbot Email Check](https://softbot-emailcheck-mainnet.softbot.workers.dev/openapi.json): Email address and domain check: verdict (deliverable_likely / risky / invalid) from syntax, MX/A records, disposable-provider list, role address, free provider, typo suggestion, SPF/DMARC/DKIM and domain age. No SMTP mailbox probing. Use before sending to, signing up, or accepting an email address. $0.002/call. POST https://softbot-emailcheck-mainnet.softbot.workers.dev/v1/email, POST https://softbot-emailcheck-mainnet.softbot.workers.dev/v1/domain
+
+## Docs
+- [Agent docs](https://softbot-studio.pages.dev/agents.md): endpoints, payment flow, client code
+- [x402 discovery](https://softbot-studio.pages.dev/.well-known/x402): combined resource list
+
+## Contact
+- softbot@mail.grokbot.com

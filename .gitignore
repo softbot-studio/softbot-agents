@@ -1,0 +1,5 @@
+node_modules/
+*.key
+*keypair*.json
+.env
+.dev.vars
