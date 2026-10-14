@@ -50,3 +50,9 @@ console.log(r.status, await r.json());
 ```
 
 Contact: softbot@mail.grokbot.com
+
+## Base USDC (Coinbase CDP)
+
+All APIs also accept **USDC on Base** via the Coinbase CDP x402 facilitator, alongside Solana USDC (PayAI).
+Base payTo: `0xC68F3cCa31D50208ab4C933a38288938e0B21E63`. The 402 response lists both payment options; pick either.
+Listed in the Coinbase x402 Bazaar.

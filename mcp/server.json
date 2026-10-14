@@ -2,10 +2,10 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
   "name": "io.github.softbot-studio/softbot-mcp",
   "title": "Softbot Studio agent tools",
-  "description": "Pay-per-call x402 tools (USDC on Solana): read pages, extract data, token/wallet/email/website checks, screenshots, PDFs.",
+  "description": "Pay-per-call x402 tools (USDC on Solana or Base): read pages, extract data, token/wallet/email/website checks, screenshots, PDFs.",
   "version": "0.1.0",
   "websiteUrl": "https://softbot-studio.pages.dev/",
-  "repository": { "url": "https://github.com/softbot-studio/softbot-agents-public", "source": "github", "subfolder": "mcp" },
+  "repository": { "url": "https://github.com/softbot-studio/softbot-agents", "source": "github", "subfolder": "mcp" },
   "packages": [
     {
       "registryType": "npm",
