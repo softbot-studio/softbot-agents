@@ -1,0 +1,29 @@
+# Smithery configuration: https://smithery.ai/docs/config
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    properties:
+      solanaPrivateKey:
+        type: string
+        description: Solana keypair (base58 or JSON byte array) of a low-balance wallet holding USDC. Leave empty for dry-run pricing only.
+      maxSpendUsdc:
+        type: number
+        default: 0.25
+        description: Per-session USDC spend cap.
+      dryRun:
+        type: boolean
+        default: false
+        description: Only show prices, never pay.
+  commandFunction: |-
+    (config) => ({
+      command: 'npx',
+      args: ['-y', 'softbot-mcp'],
+      env: Object.assign(
+        { MAX_SPEND_USDC: String(config.maxSpendUsdc ?? 0.25), SOFTBOT_DRY_RUN: config.dryRun ? '1' : '0' },
+        config.solanaPrivateKey ? { SOLANA_PRIVATE_KEY: config.solanaPrivateKey } : {}
+      )
+    })
+  exampleConfig:
+    maxSpendUsdc: 0.25
+    dryRun: true
