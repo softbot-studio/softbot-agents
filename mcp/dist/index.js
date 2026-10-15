@@ -2,6 +2,7 @@
 /**
  * softbot-mcp: MCP stdio server exposing Softbot Studio's pay-per-call x402 APIs.
  * Pays each call in USDC on Solana mainnet from SOLANA_PRIVATE_KEY.
+ * First 3 calls per tool per wallet are free (x402 sign-in-with-x trial, signed automatically; set SOFTBOT_NO_TRIAL=1 to skip).
  */
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
@@ -10,12 +11,14 @@ import { wrapFetchWithPaymentFromConfig, decodePaymentResponseHeader } from "@x4
 import { ExactSvmScheme } from "@x402/svm/exact/client";
 import { createKeyPairSignerFromBytes } from "@solana/kit";
 import bs58 from "bs58";
-const VERSION = "0.1.0";
+import { createSIWxPayload, encodeSIWxHeader } from "@x402/extensions/sign-in-with-x";
+const VERSION = "0.2.0";
 const NETWORK = "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp";
 const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 const PAY_TO = "9csHbkGGeQqNxvtZw8hPnC34NCcmZoZXVTEGC1MiDNRE";
 const RPC = process.env.SOLANA_RPC_URL || "https://api.mainnet-beta.solana.com";
 const MAX_SPEND = Number(process.env.MAX_SPEND_USDC ?? "0.25");
+const TRIAL_OFF = /^(1|true|yes)$/i.test(process.env.SOFTBOT_NO_TRIAL || "");
 const DRY_ENV = /^(1|true|yes)$/i.test(process.env.SOFTBOT_DRY_RUN || "");
 const HOSTS = {
     reader: process.env.SOFTBOT_READER_URL || "https://softbot-reader-mainnet.softbot.workers.dev",
@@ -53,8 +56,38 @@ function getPayer(maxAtomic) {
             const signer = await createKeyPairSignerFromBytes(bytes);
             bytes.fill(0);
             // Guard fetch: refuses to let the x402 client pay if the server asks more than the advertised price.
+            // Free trial: on a 402 that offers sign-in-with-x, sign the free challenge (no funds move) and retry once.
+            // If trial calls remain, the server serves it free; otherwise we get a fresh 402 and pay normally.
+            const trialFetch = async (input0, init) => {
+                const isReq = typeof Request !== "undefined" && input0 instanceof Request;
+                const spare = isReq ? input0.clone() : null;
+                const r = await fetch(input0, init);
+                const hdrs = new Headers(init?.headers ?? (isReq ? input0.headers : undefined));
+                const input = spare ?? input0;
+                if (r.status !== 402 || TRIAL_OFF || hdrs.has("sign-in-with-x") || hdrs.has("payment-signature"))
+                    return r;
+                try {
+                    const h = r.headers.get("payment-required");
+                    if (!h)
+                        return r;
+                    const req = JSON.parse(Buffer.from(h, "base64").toString("utf8"));
+                    const ext = req.extensions?.["sign-in-with-x"];
+                    const chain = ext?.supportedChains?.find((c) => c.chainId === NETWORK);
+                    if (!ext?.info || !chain)
+                        return r;
+                    const url = typeof input === "string" ? input : input.url ?? String(input);
+                    const payload = await createSIWxPayload({ ...ext.info, chainId: chain.chainId, type: chain.type }, signer, url);
+                    hdrs.set("sign-in-with-x", encodeSIWxHeader(payload));
+                    return await fetch(isReq ? new Request(input, { headers: hdrs }) : input, isReq ? init : { ...init, headers: hdrs });
+                }
+                catch (e) {
+                    if (process.env.SOFTBOT_DEBUG)
+                        console.error("trial sign failed:", e?.message);
+                    return r;
+                }
+            };
             const guarded = async (input, init) => {
-                const r = await fetch(input, init);
+                const r = await trialFetch(input, init);
                 if (r.status === 402) {
                     const h = r.headers.get("payment-required");
                     if (h) {
@@ -83,36 +116,36 @@ function getPayer(maxAtomic) {
 const url = z.string().url().describe("Public http(s) URL");
 const DEFS = [
     { name: "read_url", title: "Read web page", host: HOSTS.reader, path: "/v1/read", price: 3000,
-        description: "Fetch a public web page and return clean markdown plus title and metadata (respects robots.txt). Use when you need to read or summarize the text of an article, docs page or any URL. Price: $0.003 USDC per call (Solana).",
+        description: "Fetch a public web page and return clean markdown plus title and metadata (respects robots.txt). Use when you need to read or summarize the text of an article, docs page or any URL. Price: $0.003 USDC per call (Solana). First 3 calls free per wallet.",
         shape: { url } },
     { name: "extract_structured", title: "Extract structured page data", host: HOSTS.reader, path: "/v1/extract", price: 4000,
-        description: "Reader Pro: return machine-readable data from a page without an LLM: meta/OpenGraph, JSON-LD, HTML tables as row objects, links, emails/phones/socials, headings, images, plus optional CSS-selector fields. Use when you need facts, tables or contact details from a page rather than prose. Price: $0.004 USDC per call.",
+        description: "Reader Pro: return machine-readable data from a page without an LLM: meta/OpenGraph, JSON-LD, HTML tables as row objects, links, emails/phones/socials, headings, images, plus optional CSS-selector fields. Use when you need facts, tables or contact details from a page rather than prose. Price: $0.004 USDC per call. First 3 calls free per wallet.",
         shape: { url,
             include: z.array(z.enum(["meta", "tables", "links", "contacts", "jsonld", "headings", "images"])).optional().describe("Sections to return (default: all)"),
             fields: z.record(z.string(), z.string()).optional().describe("Map name -> CSS selector (append ' @attr' for an attribute). Max 20.") } },
     { name: "check_solana_token", title: "Solana token safety check", host: HOSTS.token, path: "/v1/check", price: 10000,
-        description: "Solana token safety verdict (safe/caution/avoid) with a 0-100 risk score and reasons: mint/freeze authority, Token-2022 extensions, holder concentration, age, DEX liquidity. Use when about to buy, swap, accept or recommend an unfamiliar Solana token. Not financial advice. Price: $0.01 USDC per call.",
+        description: "Solana token safety verdict (safe/caution/avoid) with a 0-100 risk score and reasons: mint/freeze authority, Token-2022 extensions, holder concentration, age, DEX liquidity. Use when about to buy, swap, accept or recommend an unfamiliar Solana token. Not financial advice. Price: $0.01 USDC per call. First 3 calls free per wallet.",
         shape: { mint: z.string().describe("Solana token mint address (base58)") } },
     { name: "check_email", title: "Email address check", host: HOSTS.email, path: "/v1/email", price: 2000,
-        description: "Email address verdict (deliverable_likely/risky/invalid) from syntax, MX, disposable list, role address, typo suggestion, SPF/DMARC/DKIM and domain age. Does not contact the mailbox. Use when about to send to, sign up with, or accept an email address. Price: $0.002 USDC per call.",
+        description: "Email address verdict (deliverable_likely/risky/invalid) from syntax, MX, disposable list, role address, typo suggestion, SPF/DMARC/DKIM and domain age. Does not contact the mailbox. Use when about to send to, sign up with, or accept an email address. Price: $0.002 USDC per call. First 3 calls free per wallet.",
         shape: { email: z.string().describe("Single email address") } },
     { name: "check_domain", title: "Email domain check", host: HOSTS.email, path: "/v1/domain", price: 2000,
-        description: "Whether a domain can receive mail (MX/A, null MX), is disposable/free/typo, its SPF/DMARC/DKIM posture and registration age. Use when vetting a company or sender domain rather than a specific mailbox. Price: $0.002 USDC per call.",
+        description: "Whether a domain can receive mail (MX/A, null MX), is disposable/free/typo, its SPF/DMARC/DKIM posture and registration age. Use when vetting a company or sender domain rather than a specific mailbox. Price: $0.002 USDC per call. First 3 calls free per wallet.",
         shape: { domain: z.string().describe("Single domain, e.g. example.com") } },
     { name: "check_wallet", title: "Solana wallet profile", host: HOSTS.wallet, path: "/v1/wallet", price: 5000,
-        description: "Solana wallet verdict (established/new/suspicious/inactive) from SOL balance, holdings, age, recent activity, program-account detection, bot-pattern heuristic and OFAC sanctions match. Use when about to pay, airdrop to, trade with or trust an unknown wallet. Price: $0.005 USDC per call.",
+        description: "Solana wallet verdict (established/new/suspicious/inactive) from SOL balance, holdings, age, recent activity, program-account detection, bot-pattern heuristic and OFAC sanctions match. Use when about to pay, airdrop to, trade with or trust an unknown wallet. Price: $0.005 USDC per call. First 3 calls free per wallet.",
         shape: { address: z.string().describe("Solana wallet address (base58)") } },
     { name: "check_website", title: "Website trust check", host: HOSTS.site, path: "/v1/site", price: 3000,
-        description: "Website trust verdict (trustworthy_likely/caution/risky) from domain age, DNS, HTTPS and redirects, security headers, phishing/malware lists, brand lookalike detection and tech fingerprint. Use when about to visit, log in to, pay on, or recommend an unfamiliar site or link. Price: $0.003 USDC per call.",
+        description: "Website trust verdict (trustworthy_likely/caution/risky) from domain age, DNS, HTTPS and redirects, security headers, phishing/malware lists, brand lookalike detection and tech fingerprint. Use when about to visit, log in to, pay on, or recommend an unfamiliar site or link. Price: $0.003 USDC per call. First 3 calls free per wallet.",
         shape: { url: z.string().describe("URL or bare domain, e.g. https://example.com/login") } },
     { name: "screenshot_url", title: "Screenshot web page", host: HOSTS.shot, path: "/v1/screenshot", price: 10000, kind: "image",
-        description: "Render a public page in headless Chrome and return a PNG/JPEG screenshot as an image. Use when you need to see what a page actually looks like (layout, visual check, proof, charts). Price: $0.01 USDC per call.",
+        description: "Render a public page in headless Chrome and return a PNG/JPEG screenshot as an image. Use when you need to see what a page actually looks like (layout, visual check, proof, charts). Price: $0.01 USDC per call. First 3 calls free per wallet.",
         shape: { url,
             width: z.number().int().min(320).max(1920).optional(), height: z.number().int().min(240).max(1920).optional(),
             full_page: z.boolean().optional().describe("Capture full scroll height (max 8000px)"),
             format: z.enum(["png", "jpeg"]).optional(), wait_ms: z.number().int().min(0).max(5000).optional() } },
     { name: "page_to_pdf", title: "Save page as PDF", host: HOSTS.shot, path: "/v1/pdf", price: 10000, kind: "pdf",
-        description: "Render a public page in headless Chrome and return it as an A4 PDF (embedded resource, base64). Use when you need a printable or archivable copy of a page, receipt or article. Price: $0.01 USDC per call.",
+        description: "Render a public page in headless Chrome and return it as an A4 PDF (embedded resource, base64). Use when you need a printable or archivable copy of a page, receipt or article. Price: $0.01 USDC per call. First 3 calls free per wallet.",
         shape: { url, wait_ms: z.number().int().min(0).max(5000).optional() } },
 ];
 const server = new McpServer({ name: "softbot-mcp", version: VERSION });
@@ -147,7 +180,8 @@ for (const d of DEFS) {
                 j = JSON.parse(text);
             }
             catch { }
-            const meta = { status: r.status, paid_usdc: settlement?.success ? fmt(d.price) : "0", tx: settlement?.transaction ?? null, session_spent_usdc: fmt(spentAtomic) };
+            const freeTrial = r.headers.get("x-trial") === "free";
+            const meta = { status: r.status, free_trial: freeTrial, trial_remaining: freeTrial ? Number(r.headers.get("x-trial-remaining")) : undefined, paid_usdc: settlement?.success ? fmt(d.price) : "0", tx: settlement?.transaction ?? null, session_spent_usdc: fmt(spentAtomic) };
             if (!r.ok)
                 return { isError: true, content: [{ type: "text", text: JSON.stringify({ ...meta, error: j ?? text.slice(0, 2000) }, null, 2) }] };
             if (d.kind === "image" && j?.data_base64) {

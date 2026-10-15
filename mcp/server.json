@@ -3,14 +3,14 @@
   "name": "io.github.softbot-studio/softbot-mcp",
   "title": "Softbot Studio agent tools",
   "description": "Pay-per-call x402 tools (USDC on Solana or Base): read pages, extract data, token/wallet/email/website checks, screenshots, PDFs.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "websiteUrl": "https://softbot-studio.pages.dev/",
   "repository": { "url": "https://github.com/softbot-studio/softbot-agents", "source": "github", "subfolder": "mcp" },
   "packages": [
     {
       "registryType": "npm",
       "identifier": "softbot-mcp",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "transport": { "type": "stdio" },
       "environmentVariables": [
         { "name": "SOLANA_PRIVATE_KEY", "description": "Solana keypair (base58 or JSON byte array) of a wallet holding USDC; pays each call", "isRequired": false, "isSecret": true, "format": "string" },

@@ -25,6 +25,14 @@ Email address and domain check: verdict (deliverable_likely / risky / invalid) f
 - `POST https://softbot-emailcheck-mainnet.softbot.workers.dev/v1/domain` — $0.002 — body `{"domain":"example.com"}`
 - Spec: https://softbot-emailcheck-mainnet.softbot.workers.dev/openapi.json · Discovery: https://softbot-emailcheck-mainnet.softbot.workers.dev/.well-known/x402
 
+## Free trial
+**First 3 calls free per wallet**, per tool (each of the 9 endpoints). No payment and no funds needed, just a free signature:
+1. Call the endpoint normally. The HTTP 402 `PAYMENT-REQUIRED` header carries an x402 `sign-in-with-x` (SIWX, CAIP-122) challenge in `extensions["sign-in-with-x"]`.
+2. Sign it with your Solana (SIWS, ed25519) or EVM/Base (SIWE, EIP-191) wallet and retry with the `SIGN-IN-WITH-X` header (`createSIWxPayload` + `encodeSIWxHeader` from `@x402/extensions/sign-in-with-x`).
+3. A free call returns `x-trial: free` and `x-trial-remaining`. After 3 successful calls you get a normal 402: pay as usual.
+- Failed calls (4xx/5xx) do not use up a trial. A store-wide cap of 200 free calls/day applies; after that, normal pricing.
+- The `softbot-mcp` MCP server does this automatically.
+
 ## Payment (x402 v2)
 - Network: Solana mainnet (`solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp`)
 - Asset: USDC (`EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v`), scheme `exact`

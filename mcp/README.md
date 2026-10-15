@@ -17,6 +17,9 @@ MCP server for [Softbot Studio](https://softbot-studio.pages.dev/) pay-per-call 
 
 Every paid tool accepts `dry_run: true`, which returns the price and endpoint without paying.
 
+## Free trial
+The first 3 calls of each tool are free per wallet. The server signs the x402 sign-in-with-x challenge with your key automatically (a signature only, no funds move), then pays normally once the trial is used up. Results show `free_trial` and `trial_remaining`. Set `SOFTBOT_NO_TRIAL=1` to always pay.
+
 ## Configuration (env vars)
 
 - `SOLANA_PRIVATE_KEY` (required for paid calls) is the keypair of a wallet holding a little USDC (no SOL needed, since the facilitator pays network fees). It takes base58, or the JSON byte array from `solana-keygen`. **Use a dedicated low-balance wallet.**

@@ -1,7 +1,7 @@
 {
   "name": "softbot-mcp",
-  "version": "0.1.0",
-  "description": "MCP server for Softbot Studio pay-per-call agent tools (x402, USDC on Solana): read pages, extract data, token/wallet/email/website checks, screenshots, PDFs.",
+  "version": "0.2.0",
+  "description": "MCP server for Softbot Studio pay-per-call agent tools (x402, USDC on Solana; first 3 calls free per wallet): read pages, extract data, token/wallet/email/website checks, screenshots, PDFs.",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc && chmod +x dist/index.js",
@@ -22,6 +22,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.1",
     "@solana/kit": "^5.5.1",
+    "@x402/extensions": "^2.28.0",
     "@x402/fetch": "^2.28.0",
     "@x402/svm": "^2.28.0",
     "bs58": "^6.0.0",
