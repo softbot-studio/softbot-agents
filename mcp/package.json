@@ -46,5 +46,10 @@
   "mcpName": "io.github.softbot-studio/softbot-mcp",
   "engines": {
     "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/softbot-studio/softbot-agents.git",
+    "directory": "mcp"
   }
 }
