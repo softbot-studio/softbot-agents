@@ -3,6 +3,10 @@
 x402 pay-per-call APIs for AI agents. Store: https://softbot-studio.pages.dev/
 
 
+## Agent skill: softbot-tools
+[`skills/softbot-tools/SKILL.md`](skills/softbot-tools/SKILL.md) is an open Agent Skills (SKILL.md) package for Claude Code, Cursor, Codex and similar agents. It tells them when to use these tools, how to set up the [`softbot-mcp`](mcp/) MCP server, and to use the free trial first and confirm with the user before spending USDC. Copy the `skills/softbot-tools/` folder into your agent's skills directory.
+
+
 ## Softbot Reader
 Turns any public web page URL into clean markdown (title, main text, links) for LLM context. Use when an agent needs to read a web page without running a browser.
 
