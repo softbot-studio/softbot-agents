@@ -119,9 +119,9 @@ Each result is JSON with `status`, `free_trial`, `trial_remaining` (during the t
 | `status: 5xx` | Upstream failure | Not charged. Retry once at most, then report. |
 | `Call failed: ...` | Network or client error | Report it. Don't retry in a loop. |
 
-## Without MCP (direct HTTP, Solana or Base)
+## Without MCP (direct HTTP, Solana, Base, Polygon or Arbitrum)
 
-Each tool is also a plain HTTPS endpoint that speaks x402 v2. The endpoints accept USDC on **Solana or Base**, so an agent with its own x402 client can call them directly: call it → HTTP 402 with a `PAYMENT-REQUIRED` header → retry with `PAYMENT-SIGNATURE`. The `softbot-mcp` server itself only pays with Solana. See [references/tools.md](references/tools.md) for endpoints, networks and pay-to addresses. The same rules apply: free trial first, and confirm with the user before spending.
+Each tool is also a plain HTTPS endpoint that speaks x402 v2. The endpoints accept USDC on **Solana, Base, Polygon or Arbitrum**, so an agent with its own x402 client can call them directly: call it → HTTP 402 with a `PAYMENT-REQUIRED` header → retry with `PAYMENT-SIGNATURE`. The `softbot-mcp` server itself only pays with Solana. See [references/tools.md](references/tools.md) for endpoints, networks and pay-to addresses. The same rules apply: free trial first, and confirm with the user before spending.
 
 ## Links
 

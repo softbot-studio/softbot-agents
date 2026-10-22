@@ -63,8 +63,15 @@ console.log(r.status, await r.json());
 
 Contact: softbot@mail.grokbot.com
 
-## Base USDC (Coinbase CDP)
+## EVM USDC: Base, Polygon, Arbitrum (Coinbase CDP)
 
-All APIs also accept **USDC on Base** via the Coinbase CDP x402 facilitator, alongside Solana USDC (PayAI).
-Base payTo: `0xC68F3cCa31D50208ab4C933a38288938e0B21E63`. The 402 response lists both payment options; pick either.
+All APIs also accept native **USDC on Base, Polygon and Arbitrum One** via the Coinbase CDP x402 facilitator, alongside Solana USDC (PayAI), at the same price.
+EVM payTo (all three chains): `0xC68F3cCa31D50208ab4C933a38288938e0B21E63`.
+- Base `eip155:8453`: USDC `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`
+- Polygon `eip155:137`: USDC `0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359` (native, not USDC.e)
+- Arbitrum One `eip155:42161`: USDC `0xaf88d065e77c8cC2239327C5EDb3A432268e5831` (native, not USDC.e)
+
+The 402 response lists every payment option; pick any.
+
+**Free trial: 3 free calls per wallet per endpoint via Sign-In-With-X.** Each service's `/llms.txt` has a copy-paste example.
 Listed in the Coinbase x402 Bazaar.

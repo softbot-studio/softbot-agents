@@ -14,4 +14,4 @@
 ## Contact
 - softbot@mail.grokbot.com
 
-Payments: USDC on Solana (PayAI facilitator) or USDC on Base (Coinbase CDP facilitator, payTo 0xC68F3cCa31D50208ab4C933a38288938e0B21E63). Both offered in each 402 response.
+Payments: USDC on Solana (PayAI facilitator) or native USDC on Base, Polygon or Arbitrum One (Coinbase CDP facilitator, payTo 0xC68F3cCa31D50208ab4C933a38288938e0B21E63). All offered in each 402 response. Free trial: 3 free calls per wallet per endpoint via Sign-In-With-X.

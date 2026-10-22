@@ -59,9 +59,11 @@ Source: softbot-mcp v0.2.0 and https://softbot-studio.pages.dev/agents.md. Every
 - Failed calls (4xx/5xx) don't use up a trial call. A store-wide cap of 200 free calls per day applies.
 
 ## Payment (x402 v2, scheme `exact`)
-Each endpoint's 402 response offers both options at the same price.
+Each endpoint's 402 response offers all options at the same price.
 - **Solana mainnet** (`solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp`): USDC mint `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v`, pay to `9csHbkGGeQqNxvtZw8hPnC34NCcmZoZXVTEGC1MiDNRE`, facilitator PayAI (https://facilitator.payai.network). This is the option `softbot-mcp` uses.
 - **Base mainnet** (`eip155:8453`): USDC `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`, pay to `0xC68F3cCa31D50208ab4C933a38288938e0B21E63`, facilitator Coinbase CDP (https://api.cdp.coinbase.com/platform/v2/x402). Direct HTTP only.
+- **Polygon mainnet** (`eip155:137`): native USDC `0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359`, same pay-to and facilitator as Base. Direct HTTP only.
+- **Arbitrum One** (`eip155:42161`): native USDC `0xaf88d065e77c8cC2239327C5EDb3A432268e5831`, same pay-to and facilitator as Base. Direct HTTP only.
 - Flow: call with no payment → HTTP 402 with a `PAYMENT-REQUIRED` header → retry with a `PAYMENT-SIGNATURE` header (any x402 v2 client handles this). The settlement comes back in `PAYMENT-RESPONSE`.
 - Invalid input (4xx) and upstream failures (5xx) are not charged.
 
