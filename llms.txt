@@ -1,6 +1,6 @@
 # Softbot Studio
 
-> Pay-per-call tools for AI agents over x402 (HTTP 402). Solana mainnet USDC via the PayAI facilitator. No signup or API key; failed calls are free.
+> Pay-per-call tools for AI agents over x402 (HTTP 402). Solana mainnet USDC via the PayAI facilitator. No signup or API key; failed calls are free. First call free: 1 free call per tool per day, no signup. Just POST a valid JSON body with no payment header; the response carries x-trial: free and x-price-usdc. After that, normal x402 pricing (free again tomorrow). Failed calls don't count.
 
 ## Tools
 - [Softbot Reader](https://softbot-reader-mainnet.softbot.workers.dev/openapi.json): Turns any public web page URL into clean markdown (title, main text, links) for LLM context. Use when an agent needs to read a web page without running a browser. $0.003/call. POST https://softbot-reader-mainnet.softbot.workers.dev/v1/read
